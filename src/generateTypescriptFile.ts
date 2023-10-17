@@ -5,6 +5,7 @@ import {
   capitalizeFirstLetter,
   generateRequestInterface,
   generateResponseInterface,
+  mergeArrays,
   mergeObjects,
   parseInterface,
   readFileContent,
@@ -24,7 +25,7 @@ function generateTypescriptFile(
   // 使用正则表达式匹配导出函数的名称
   const regex = /\/\*\*\s*(.*?)\s*\*\/\s*export const (\w+)\s*=/g;
   let match;
-  const interfaces: { [key: string]: string } = {};
+  const interfaces: { [key: string]: string }[] = [];
 
   while ((match = regex.exec(content)) !== null) {
     /** 匹配到的注释内容 */
@@ -32,10 +33,15 @@ function generateTypescriptFile(
     /** 匹配到的函数名称 */
     const functionName = match[2];
     // 调用函数生成接口定义并拼接到接口字符串中
-    interfaces[`${capitalizeFirstLetter(functionName)}Request`] =
-      generateRequestInterface(comment, functionName);
-    interfaces[`${capitalizeFirstLetter(functionName)}Response`] =
-      generateResponseInterface(comment, functionName);
+    interfaces.push({
+      [`${capitalizeFirstLetter(functionName)}Request`]:
+        generateRequestInterface(comment, functionName),
+    });
+
+    interfaces.push({
+      [`${capitalizeFirstLetter(functionName)}Response`]:
+        generateResponseInterface(comment, functionName),
+    });
   }
 
   const outputFileName = `${path.parse(sourceFilePath).name}.type.ts`;
@@ -52,26 +58,16 @@ function generateTypescriptFile(
     path.dirname(sourceFilePath),
     interfaceFile
   );
-  let parsedInterfaces: { [key: string]: string } | undefined = undefined;
+  let parsedInterfaces: { [key: string]: string }[] = [];
   if (fs.existsSync(interfaceFilePath)) {
     const existingInterfaces = readFileContent(interfaceFilePath);
     parsedInterfaces = parseInterface(existingInterfaces);
-    console.log(
-      '🌊 ~ file: generateTypescriptFile.ts:58 ~ interfaces:',
-      interfaces
-    );
-
-    console.log(
-      '🌊 ~ file: generateTypescriptFile.ts:48 ~ existingInterfaces:',
-      parsedInterfaces
-    );
   }
 
   // 将接口对象转换为字符串
-  const interfacesString = Object.values(
-    parsedInterfaces ? mergeObjects(interfaces, parsedInterfaces) : interfaces
-  ).join('\n\n');
-  console.log("🌊 ~ file: generateTypescriptFile.ts:74 ~ interfacesString:", interfacesString)
+  const interfacesString = mergeArrays(interfaces, parsedInterfaces)
+    .map((i) => Object.values(i)[0])
+    .join('\n\n');
 
   fs.writeFileSync(outputFile, interfacesString, 'utf-8');
 }

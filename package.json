@@ -2,7 +2,7 @@
   "name": "gen-interface-plugin",
   "displayName": "gen-interface-plugin",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.83.0"
   },
