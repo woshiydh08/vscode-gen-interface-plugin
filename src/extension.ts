@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { build } from './generateTypescriptFile';
+import { generateTypescriptFile } from './generateTypescriptFile';
 
 function gen(sourceFilePath: string, force: boolean = false) {
   try {
-    build(sourceFilePath, force);
+    generateTypescriptFile(sourceFilePath, force);
     vscode.window.showInformationMessage('生成文件成功！');
   } catch (error: any) {
     vscode.window.showErrorMessage('生成文件失败：' + error.message);

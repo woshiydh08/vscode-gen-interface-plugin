@@ -59,6 +59,18 @@ export function readFileContent(file: string): string {
 }
 
 /**
+ * 获取接口文件的路径
+ * @param sourceFilePath ts文件的路径
+ * @returns 接口文件的路径
+ */
+export function getInterfaceFilePath(sourceFilePath: string) {
+  const interfaceFileName = `${path.parse(sourceFilePath).name}.type.ts`;
+  // 定义TypeScript文件的输出路径
+  const interfaceFilePath = path.join(sourceFilePath, '..', interfaceFileName);
+  return interfaceFilePath;
+}
+
+/**
  * 辅助函数：找到接口的结尾位置
  * @param code 源代码字符串
  * @param startIndex 接口起始位置的索引
@@ -84,14 +96,45 @@ export function findInterfaceEndIndex(
   return curlyBracketsCount === 0 ? index : -1;
 }
 
-export function parseInterface(
-  sourceCode: string
-): { [key: string]: string }[] {
-  const interfaceRegex = /\/\*\*([^}]+?)\*\/\s*export\s*interface\s*(\w+)\s*{/gs;
+export function parseSourceFile(content: string) {
+  // 使用正则表达式匹配导出函数的名称
+  const regex = /\/\*\*\s*(.*?)\s*\*\/\s*export const (\w+)\s*=/g;
+  let match;
+  const interfaces: Record<string, string>[] = [];
+
+  while ((match = regex.exec(content)) !== null) {
+    /** 匹配到的注释内容 */
+    const comment = match[1];
+    /** 匹配到的函数名称 */
+    const functionName = match[2];
+    // 调用函数生成接口定义并拼接到接口字符串中
+    interfaces.push({
+      [`${capitalizeFirstLetter(functionName)}Request`]:
+        generateRequestInterface(comment, functionName),
+    });
+
+    interfaces.push({
+      [`${capitalizeFirstLetter(functionName)}Response`]:
+        generateResponseInterface(comment, functionName),
+    });
+  }
+  return interfaces;
+}
+
+/**
+ * 解析已有的interface文件
+ * @param content 要解析的interface文件的内容
+ * @returns
+ */
+export function parseInterfaceFile(content: string) {
+  /** 使用正则表达式匹配interface */
+  const interfaceRegex =
+    /\/\*\*([^}]+?)\*\/\s*export\s*interface\s*(\w+)\s*{/gs;
+
   const interfaces: Record<string, string>[] = [];
 
   let match;
-  while ((match = interfaceRegex.exec(sourceCode))) {
+  while ((match = interfaceRegex.exec(content))) {
     const comment = match[1].trim();
     const interfaceName = match[2];
 
@@ -100,11 +143,11 @@ export interface ${interfaceName} {`;
 
     // 寻找接口的结尾位置
     const endIndex = findInterfaceEndIndex(
-      sourceCode,
+      content,
       match.index + match[0].length
     );
     if (endIndex !== -1) {
-      str += sourceCode.substring(match.index + match[0].length, endIndex);
+      str += content.substring(match.index + match[0].length, endIndex);
     }
     interfaces.push({
       [interfaceName]: str,
@@ -115,9 +158,9 @@ export interface ${interfaceName} {`;
 }
 
 export function mergeObjects(
-  a: { [key: string]: string },
-  b: { [key: string]: string }
-): { [key: string]: string } {
+  a: Record<string, string>,
+  b: Record<string, string>
+): Record<string, string> {
   const result = { ...b };
 
   for (const [key, value] of Object.entries(a)) {
@@ -134,11 +177,11 @@ export function mergeObjects(
 }
 
 export function mergeArrays(
-  arr1: { [key: string]: string }[],
-  arr2: { [key: string]: string }[]
-): { [key: string]: string }[] {
-  const result: { [key: string]: string }[] = [];
-  const extra: { [key: string]: string }[] = [];
+  arr1: Record<string, string>[],
+  arr2: Record<string, string>[]
+): Record<string, string>[] {
+  const result: Record<string, string>[] = [];
+  const extra: Record<string, string>[] = [];
   // 复制数组A的对象到结果数组
   for (const obj of arr1) {
     result.push({ ...obj });
@@ -166,4 +209,13 @@ export function mergeArrays(
   }
 
   return [...extra, ...result];
+}
+
+/**
+ * 对象数组转为字符串
+ * @param arr 对象数组
+ * @returns 字符串
+ */
+export function objectArrayConversionToString(arr: Record<string, string>[]) {
+  return arr.map((i) => Object.values(i)[0]).join('\n\n');
 }
