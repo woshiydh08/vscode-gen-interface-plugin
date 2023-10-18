@@ -87,7 +87,7 @@ export function findInterfaceEndIndex(
 export function parseInterface(
   sourceCode: string
 ): { [key: string]: string }[] {
-  const interfaceRegex = /\/\*\*(.*?)\*\/\s*export\s*interface\s*(\w+)\s*{/gs;
+  const interfaceRegex = /\/\*\*([^}]+?)\*\/\s*export\s*interface\s*(\w+)\s*{/gs;
   const interfaces: Record<string, string>[] = [];
 
   let match;

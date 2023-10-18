@@ -6,7 +6,6 @@ import {
   generateRequestInterface,
   generateResponseInterface,
   mergeArrays,
-  mergeObjects,
   parseInterface,
   readFileContent,
 } from './utils';
