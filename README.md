@@ -4,7 +4,7 @@
 
 ## 用法
 
-鼠标右击`.ts`后缀结尾的文件, 选择`生成`
+鼠标右击`.ts`后缀结尾的文件, 选择`生成interface类型`
 
 文件格式需如下
 
@@ -46,3 +46,9 @@ export interface FunctionBResponse {
 }
 
 ```
+
+> 该选项需要当前同级目录下无xxx.type.ts文件, 否则生成失败
+
+## 生成interface类型(合并)
+
+会合并已有的xxx.type.ts文件的内容

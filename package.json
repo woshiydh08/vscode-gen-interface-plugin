@@ -2,7 +2,12 @@
   "name": "gen-interface-plugin",
   "displayName": "gen-interface-plugin",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/woshiydh08/vscode-gen-interface-plugin.git"
+  },
+  "license": "ISC",
   "engines": {
     "vscode": "^1.83.0"
   },
